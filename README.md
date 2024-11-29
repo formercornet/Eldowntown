@@ -23,15 +23,17 @@ El Downtown is a social networking platform designed to foster meaningful intera
 **1. Clone the repository**
 ```bash
 git clone https://github.com/formercornet/El-Downtown.git
+```
 
 **2. Build and run the app with Docker**
 -Make sure you have Docker installed on your machine.
 -From the root of the project, build and start the containers:
 ```bash
 docker-compose up --build
+```
 
 **3. .env Setup**
 -Make sure to create a .env file in the project root with the following content:
 '''bash
 JWT_SECRET_KEY=your_secret_key
-
+```
