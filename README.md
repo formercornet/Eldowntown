@@ -6,7 +6,7 @@ El Downtown is a social networking platform designed to foster meaningful intera
 ### Project Structure
 - **Frontend**: React Native for a responsive and user-friendly UI.
 - **Backend**: Flask to manage API requests and handle authentication.
-- **Database**: MySQL for efficient data storage.
+- **Database**: SQLALCHEMY for efficient data storage.
 - **Notifications**: Real-time notifications powered by One Signal.
 - **Containerization**: Docker for environment consistency.
 
