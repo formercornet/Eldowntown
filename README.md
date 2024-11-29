@@ -34,6 +34,6 @@ docker-compose up --build
 
 **3. .env Setup**
 -Make sure to create a .env file in the project root with the following content:
-'''bash
-JWT_SECRET_KEY=your_secret_key
-```
+
+JWT_SECRET_KEY=**your_secret_key**
+
