@@ -1,27 +1,75 @@
-from flask import Flask
+from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import generate_password_hash
+from datetime import datetime
+from flask import Flask, request, jsonify
+from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import generate_password_hash, check_password_hash
 
-# Initialize the Flask application and SQLAlchemy
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://username:password@localhost/el_downtown_db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///D:/Eldowntown-1/backend/database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.secret_key = 'your_secret_key'  # For session management
 
-# Initialize the database
 db = SQLAlchemy(app)
 
-# Define the User model
+# Table 1: User Model
 class User(db.Model):
-    __tablename__ = 'users'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(100), unique=True, nullable=False)
+    user_id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(50), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(200), nullable=False)
-    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+    password_hash = db.Column(db.String(128), nullable=False)
+    role = db.Column(db.String(10), default='User')  # Admin or User
+    
+    # Relationships (you can add these later when needed)
+    # posts = db.relationship('Post', backref='author', lazy=True)
 
-# Create the database and the User table
+# Initialize the database (for testing purposes)
 with app.app_context():
     db.create_all()
 
-if __name__ == "__main__":
+# Registration Route - Simplified for backend testing
+@app.route('/register', methods=['POST'])
+def register():
+    data = request.get_json()  # Get data as JSON
+    username = data.get('username')
+    email = data.get('email')
+    password = data.get('password')
+    password_confirm = data.get('password_confirm')
+
+    # Check if passwords match
+    if password != password_confirm:
+        return jsonify({'message': 'Passwords do not match!'}), 400
+    
+    # Check if the email already exists
+    existing_user = User.query.filter_by(email=email).first()
+    if existing_user:
+        return jsonify({'message': 'Email already registered!'}), 400
+    
+    # Hash the password using werkzeug
+    hashed_password = generate_password_hash(password)
+    
+    # Create a new user and add to the database
+    new_user = User(username=username, email=email, password_hash=hashed_password)
+    db.session.add(new_user)
+    db.session.commit()
+
+    return jsonify({'message': 'Registration successful!'}), 201
+
+# Login Route
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    email = data.get('email')
+    password = data.get('password')
+
+    # Find the user by email
+    user = User.query.filter_by(email=email).first()
+    if user and check_password_hash(user.password_hash, password):
+        return jsonify({'message': 'Login successful!'}), 200
+    else:
+        return jsonify({'message': 'Invalid email or password!'}), 400
+
+# Run the app
+if __name__ == '__main__':
     app.run(debug=True)
