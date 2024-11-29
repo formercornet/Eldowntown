@@ -15,8 +15,8 @@ El Downtown is a social networking platform designed to foster meaningful intera
 - **Project Board**: [GitHub Project Board](https://github.com/users/formercornet/projects/1)
 - **Roles**:
   - **Scrum Master**: Ali Nazeer
-  - **Product Owner**: [Name]
-  - **Development Team**: Ali Nazeer, [Other Names]
+  - **Product Owner**: Abdelaleem
+  - **Development Team**: Ali Nazeer, Abdelaleem, Ahmed Abdelsalam, Reham
 
 ### Getting Started
 
@@ -24,16 +24,15 @@ El Downtown is a social networking platform designed to foster meaningful intera
 ```bash
 git clone https://github.com/formercornet/El-Downtown.git
 ```
+**2. .env Setup**
+-Make sure to create a .env file in the project root with the following content:
 
-**2. Build and run the app with Docker**
+JWT_SECRET_KEY=**your_secret_key**
+
+**3. Build and run the app with Docker**
 -Make sure you have Docker installed on your machine.
 -From the root of the project, build and start the containers:
 ```bash
 docker-compose up --build
 ```
-
-**3. .env Setup**
--Make sure to create a .env file in the project root with the following content:
-
-JWT_SECRET_KEY=**your_secret_key**
 
