@@ -26,8 +26,9 @@ git clone https://github.com/formercornet/El-Downtown.git
 ```
 **2. .env Setup**
 Make sure to create a .env file in the project root with the following content:
-
+```bash
 JWT_SECRET_KEY=**your_secret_key**
+```
 
 **3. Build and run the app with Docker**
 -Make sure you have Docker installed on your machine.
