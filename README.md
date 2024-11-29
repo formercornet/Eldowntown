@@ -25,7 +25,7 @@ El Downtown is a social networking platform designed to foster meaningful intera
 git clone https://github.com/formercornet/El-Downtown.git
 ```
 **2. .env Setup**
--Make sure to create a .env file in the project root with the following content:
+Make sure to create a .env file in the project root with the following content:
 
 JWT_SECRET_KEY=**your_secret_key**
 
