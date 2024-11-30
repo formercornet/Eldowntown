@@ -2,7 +2,9 @@ version: '3.8'
 
 services:
   backend:
-    build: .
+    build:
+      context: ./backend  # Set the build context to the 'backend' folder
+      dockerfile: Dockerfile  # Specify the Dockerfile location if it's named differently or in a subfolder
     ports:
       - "5000:5000"  # Map port 5000 on the host to port 5000 in the container
     environment:
@@ -12,7 +14,7 @@ services:
       #- ONESIGNAL_APP_ID=${ONESIGNAL_APP_ID}
       #- ONESIGNAL_API_KEY=${ONESIGNAL_API_KEY}
     volumes:
-      - .:/app  # Mount the project directory to the container's /app directory
+      - ./backend:/app  # Mount the backend directory to the container's /app directory
     command: python3 app.py  # This will run your Flask app, make sure the entry point is correct
     networks:
       - backend_network
@@ -24,4 +26,3 @@ networks:
 volumes:
   db_data:
     driver: local
-
