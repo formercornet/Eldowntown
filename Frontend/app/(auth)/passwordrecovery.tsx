@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { SafeAreaView, TextInput, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { useRouter } from "expo-router";
 
 const ForgotPasswordScreen: React.FC = () => {
   const [email, setEmail] = useState('');
-
+  const router = useRouter();
   const handlePasswordReset = () => {
     if (email) {
       // Simulate sending the password reset link
@@ -30,7 +31,7 @@ const ForgotPasswordScreen: React.FC = () => {
       <TouchableOpacity style={styles.button} onPress={handlePasswordReset}>
         <Text style={styles.buttonText}>Send Reset Link</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.backButton} onPress={() => console.log('Go back')}>
+      <TouchableOpacity style={styles.backButton} onPress={() => router.replace("/login")}>
         <Text style={styles.backButtonText}>Back to Login</Text>
       </TouchableOpacity>
     </SafeAreaView>

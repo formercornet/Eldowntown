@@ -6,7 +6,7 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Video, ResizeMode } from 'expo-av';
-import Slider from '@react-native-community/slider';
+import { Dimensions, useWindowDimensions } from 'react-native';
 
 interface Media {
   type: 'image' | 'video';

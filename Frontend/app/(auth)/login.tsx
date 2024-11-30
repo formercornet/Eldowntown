@@ -86,7 +86,15 @@ export default function LoginScreen() {
               value={form.password}
             />
           </View>
-
+          <TouchableOpacity
+            style={styles.forgotPasswordContainer}
+            onPress={() => {
+      // Add navigation to forgot password screen
+            router.push('/passwordrecovery');
+            }}
+                >
+            <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+          </TouchableOpacity>
           <TouchableOpacity
             onPress={handleLogin}
             style={styles.formAction}
@@ -171,6 +179,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     backgroundColor: '#075eec',
     borderRadius: 12,
+  },
+  forgotPasswordContainer: {
+    alignItems: 'center',
+    marginTop: 12,
+    marginBottom: 24,
+  },
+  forgotPasswordText: {
+    fontSize: 14,
+    color: '#007AFF',
+    fontWeight: '500',
   },
   btnText: {
     fontSize: 17,
