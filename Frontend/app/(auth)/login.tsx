@@ -1,154 +1,189 @@
-import { SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View, Dimensions } from 'react-native';
-import { useState } from 'react';
-import { IconSymbol } from '@/components/ui/IconSymbol';
-import { useAuth } from '@/app/hooks/useAuth';
-
-
-export type IconName = 'Google' | 'Facebook' | 'Apple';
-
+import React, { useState } from 'react';
+import {
+  StyleSheet,
+  SafeAreaView,
+  View,
+  Image,
+  Text,
+  TouchableOpacity,
+  TextInput,
+  ScrollView,
+  ActivityIndicator,
+  Alert,
+} from 'react-native';
+import { useRouter } from 'expo-router';
 
 export default function LoginScreen() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const { signIn } = useAuth();
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [form, setForm] = useState({
+    email: '',
+    password: '',
+  });
 
-  const handleLogin = () => {
-    console.log('Login:', username, password);
-    signIn({ username });
-  };
-
-  const handleGoogleSignIn = () => {
-    console.log('Google sign in');
-  };
+  const handleLogin = async () => {
+    if (!form.email || !form.password) {
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+    
+    setIsLoading(true);
+    try {
+      // Add your login logic here
+      console.log('Login:', form);
+      router.replace('/(tabs)/home'); // Changed from '../(tabs)' to '/(tabs)/home'
+    } catch (error) {
+      Alert.alert('Error', 'Login failed');
+    } finally {
+      setIsLoading(false);
+    }
+};
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.rectangle}>
-        <Text style={styles.title}>Welcome Back</Text>
-        <View style={styles.inputContainer}>
-          <Text>Username:</Text>
-          <TextInput
-            style={styles.input}
-            value={username}
-            onChangeText={setUsername}
-            placeholder="username"
-            placeholderTextColor="rgba(0, 0, 0, 0.3)"
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#e8ecf4' }}>
+      <ScrollView style={styles.container}>
+        <View style={styles.header}>
+          <Image
+            alt="App Logo"
+            resizeMode="contain"
+            style={styles.headerImg}
+            // source={{ uri: 'https://assets.withfra.me/SignIn.2.png' }}
           />
+
+          <Text style={styles.title}>
+            Sign in to <Text style={{ color: '#075eec' }}>Downtown</Text>
+          </Text>
+
+          <Text style={styles.subtitle}>
+            Get access to your user-friendly social media app
+          </Text>
         </View>
-        <View style={styles.inputContainer}>
-          <Text>Password:</Text>
-          <TextInput
-            style={styles.input}
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            placeholder="password"
-            placeholderTextColor="rgba(0, 0, 0, 0.3)"
-          />
-          <TouchableOpacity onPress={() => console.log('Forgot password')}>
-            <Text style={styles.forgotPassword}>Forgot password?</Text>
+
+        <View style={styles.form}>
+          <View style={styles.input}>
+            <Text style={styles.inputLabel}>Email address</Text>
+            <TextInput
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="email-address"
+              onChangeText={email => setForm({ ...form, email })}
+              placeholder="john@example.com"
+              placeholderTextColor="#6b7280"
+              style={styles.inputControl}
+              value={form.email}
+            />
+          </View>
+
+          <View style={styles.input}>
+            <Text style={styles.inputLabel}>Password</Text>
+            <TextInput
+              autoCorrect={false}
+              onChangeText={password => setForm({ ...form, password })}
+              placeholder="********"
+              placeholderTextColor="#6b7280"
+              style={styles.inputControl}
+              secureTextEntry
+              value={form.password}
+            />
+          </View>
+
+          <TouchableOpacity
+            onPress={handleLogin}
+            style={styles.formAction}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.btnText}>Sign in</Text>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            onPress={() => router.push('./register')} // Changed from './register' to '/register'
+            style={styles.formFooter}
+          >
+            <Text style={styles.formFooterText}>
+              Don't have an account?{' '}
+              <Text style={{ textDecorationLine: 'underline' }}>Sign up</Text>
+            </Text>
           </TouchableOpacity>
         </View>
-        
-        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-          <Text style={styles.buttonText}>Login</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.googleButton} onPress={handleGoogleSignIn}>
-          <Text style={styles.googleButtonText}>Continue with Google</Text>
-        </TouchableOpacity>
-
-        <View style={styles.signUpContainer}>
-          <Text style={styles.signUpText}>Don't have an account? </Text>
-          <TouchableOpacity onPress={() => console.log('Navigate to signup')}>
-            <Text style={styles.signUpLink}>Sign up</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: 'black',
-    justifyContent: 'center',
-    padding: 16,
+    paddingVertical: 24,
+    paddingHorizontal: 16,
+    flexGrow: 1,
   },
-  rectangle: {
-    backgroundColor: 'white',
-    padding: 20,
-    borderRadius: 12,
-    width: 400,
+  header: {
+    marginVertical: 36,
+  },
+  headerImg: {
+    width: 80,
+    height: 80,
     alignSelf: 'center',
+    marginBottom: 24,
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#1d1d1d',
+    marginBottom: 6,
     textAlign: 'center',
   },
-  inputContainer: {
-    marginBottom: 16,
+  subtitle: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#929292',
+    textAlign: 'center',
+  },
+  form: {
+    marginBottom: 24,
+    flexGrow: 1,
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 12,
-    borderRadius: 8,
-    marginTop: 8,
+    marginBottom: 16,
   },
-  forgotPassword: {
-    color: '#007AFF',
-    fontSize: 14,
-    textAlign: 'right',
-    marginTop: 8,
+  inputLabel: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#1d1d1d',
+    marginBottom: 8,
   },
-  loginButton: {
-    backgroundColor: '#007AFF',
-    padding: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  googleButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 14,
-    borderRadius: 8,
-    marginTop: 12,
+  inputControl: {
+    height: 44,
     backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#ddd',
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#1d1d1d',
   },
-  googleButtonText: {
-    marginLeft: 10,
-    fontSize: 16,
-    color: '#333',
+  formAction: {
+    marginTop: 24,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: '#075eec',
+    borderRadius: 12,
   },
-  signUpContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 16,
-  },
-  signUpText: {
-    fontSize: 14,
-    color: '#666',
-  },
-  signUpLink: {
-    fontSize: 14,
-    color: '#007AFF',
+  btnText: {
+    fontSize: 17,
     fontWeight: '600',
+    color: '#fff',
+    textAlign: 'center',
   },
-  icon: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  }
+  formFooter: {
+    marginTop: 24,
+  },
+  formFooterText: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#1d1d1d',
+    textAlign: 'center',
+  },
 });

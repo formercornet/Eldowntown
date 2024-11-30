@@ -1,36 +1,42 @@
-import { createContext, useState, useEffect } from 'react';
-import { useRouter, useSegments } from 'expo-router';
+import { createContext, useState, useCallback, ReactNode } from 'react';
+import { User, AuthContextType, SignUpData } from '../hooks/useAuth';
 
-type User = {
-  username: string;
-};
-
-export const AuthContext = createContext({
-  signIn: (user: User) => {},
+export const AuthContext = createContext<AuthContextType>({
+  user: null,
+  signIn: () => {},
+  signUp: async () => {},
   signOut: () => {},
-  user: null as User | null
 });
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const segments = useSegments();
-  const router = useRouter();
 
-  useEffect(() => {
-    const inAuthGroup = segments[0] === '(auth)';
-    if (!user && !inAuthGroup) {
-      router.replace('/(auth)/login');
-    } else if (user && inAuthGroup) {
-      router.replace('/(tabs)');
+  const signIn = useCallback((userData: User) => {
+    setUser(userData);
+  }, []);
+
+  const signUp = useCallback(async (userData: SignUpData) => {
+    try {
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData),
+      });
+      
+      if (!response.ok) throw new Error('Signup failed');
+      
+      setUser({ username: userData.email, name: userData.name });
+    } catch (error) {
+      throw error;
     }
-  }, [user, segments]);
+  }, []);
+
+  const signOut = useCallback(() => {
+    setUser(null);
+  }, []);
 
   return (
-    <AuthContext.Provider value={{
-      signIn: setUser,
-      signOut: () => setUser(null),
-      user
-    }}>
+    <AuthContext.Provider value={{ user, signIn, signUp, signOut }}>
       {children}
     </AuthContext.Provider>
   );
