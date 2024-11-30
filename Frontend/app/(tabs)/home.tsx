@@ -29,6 +29,7 @@ interface Post {
   timestamp: Date;
   comments: Comment[];
   media?: Media;
+  isEditing?: boolean;
 }
 
 export default function HomeScreen() {
@@ -40,6 +41,45 @@ export default function HomeScreen() {
   const [newPostContent, setNewPostContent] = useState('');
   const [selectedMedia, setSelectedMedia] = useState<Media | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [editingPost, setEditingPost] = useState<Post | null>(null);
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editContent, setEditContent] = useState('');
+
+
+  const handleEditPost = (post: Post) => {
+    setEditingPost(post);
+    setEditContent(post.content);
+    setEditModalVisible(true);
+  };
+
+  const saveEditedPost = async () => {
+    if (!editingPost) return;
+
+    try {
+      // API call to update post
+      const response = await fetch(`YOUR_API_URL/posts/${editingPost.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          content: editContent,
+        }),
+      });
+
+      if (response.ok) {
+        setPosts(posts.map(post => 
+          post.id === editingPost.id 
+            ? { ...post, content: editContent }
+            : post
+        ));
+        setEditModalVisible(false);
+      }
+    } catch (error) {
+      console.error('Failed to edit post:', error);
+    }
+  };
+
 
   const pickMedia = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
