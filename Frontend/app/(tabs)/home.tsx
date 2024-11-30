@@ -6,6 +6,7 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Video, ResizeMode } from 'expo-av';
+import Slider from '@react-native-community/slider';
 
 interface Media {
   type: 'image' | 'video';
@@ -539,4 +540,42 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     color: '#333',
   },
+  slider: {
+    width: '100%',
+    height: 40,
+    marginVertical: 10,
+  },
+  addMediaButton: {
+    color: '#0284c7',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  postContainer: {
+    width: '100%',
+    marginVertical: 10,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  mediaContainer: {
+    width: '100%',
+    height: 300, // Fixed height for consistency
+    borderRadius: 8,
+    overflow: 'hidden',
+    marginVertical: 10,
+  },
+  image: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  video: {
+    width: '100%',
+    height: '100%',
+  }
 });
