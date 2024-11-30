@@ -41,3 +41,7 @@ ONESIGNAL_API_KEY=your_onesignal_api_key
 docker-compose up --build
 ```
 
+If you pull new changes from Git that don’t affect the Dockerfile or docker-compose.yml, you can simply run:
+```bash
+docker-compose up
+```
