@@ -114,6 +114,7 @@ export default function LoginScreen() {
   );
 }
 
+
 const styles = StyleSheet.create({
   container: {
     paddingVertical: 24,

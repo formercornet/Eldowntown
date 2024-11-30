@@ -13,9 +13,9 @@ app = Flask(__name__)
 app.secret_key = os.urandom(24)
 
 # Configuring the MySQL database connection
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://username:password@localhost/database_name'  # Replace with your DB credentials
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://username:password@localhost/database_name'  
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['JWT_SECRET_KEY'] = 'your_jwt_secret_key'  # Change this to a strong secret key
+app.config['JWT_SECRET_KEY'] = 'your_jwt_secret_key'  
 
 # Initialize database and JWT
 db = SQLAlchemy(app)
