@@ -4,7 +4,7 @@ from werkzeug.utils import secure_filename
 import os
 from datetime import datetime
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///social_app.db'  # Change this to your DB URI
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///social_app.db'  # Change this to Db file 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
