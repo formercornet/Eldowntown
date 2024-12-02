@@ -2,9 +2,9 @@ from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
 import os
-
+from datetime import datetime
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///social_app.db'  
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///social_app.db'  # Change this to your DB URI
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
@@ -50,7 +50,7 @@ with app.app_context():
 # 1. Fetch the user profile
 @app.route('/profile', methods=['GET'])
 def get_profile():
-    user_profile = UserProfile.query.first()  
+    user_profile = UserProfile.query.first()  # Assuming a single profile, modify if multi-user system
     if user_profile:
         return jsonify(user_profile.to_dict())
     return jsonify({"message": "Profile not found"}), 404
@@ -65,7 +65,7 @@ def update_profile():
     if not username or not bio:
         return jsonify({"message": "Username and bio are required!"}), 400
 
-    user_profile = UserProfile.query.first()
+    user_profile = UserProfile.query.first()  # Modify as needed for multi-user systems
     if not user_profile:
         return jsonify({"message": "Profile not found"}), 404
 
@@ -79,7 +79,7 @@ def update_profile():
             filename = secure_filename(avatar_file.filename)
             avatar_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             avatar_file.save(avatar_path)
-            user_profile.avatar = avatar_path  # Save the file path 
+            user_profile.avatar = avatar_path  # Save the file path or URL
 
     db.session.commit()
 
@@ -101,7 +101,7 @@ def create_post():
     data = request.get_json()
     content = data.get('content')
     user_id = 1  
-    media = data.get('media')  
+    media = data.get('media') 
 
     if not content:
         return jsonify({"message": "Content is required"}), 400
