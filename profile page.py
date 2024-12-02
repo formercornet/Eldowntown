@@ -1,229 +1,125 @@
-from flask import Flask, request, jsonify, redirect
-from werkzeug.utils import secure_filename
+from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity
+from werkzeug.utils import secure_filename
 import os
-import random
-import string
-import datetime
-from werkzeug.exceptions import BadRequest
 
-# Initialize Flask app
 app = Flask(__name__)
-app.secret_key = os.urandom(24)
-
-# Configuring the MySQL database connection
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://username:password@localhost/database_name'  
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///social_app.db'  
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['JWT_SECRET_KEY'] = 'your_jwt_secret_key'  
+app.config['UPLOAD_FOLDER'] = 'uploads'
+app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
 
-# Initialize database and JWT
 db = SQLAlchemy(app)
-jwt = JWTManager(app)
 
-# Database Models
+# Models for the user profile and posts
+class UserProfile(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(100), nullable=False)
+    bio = db.Column(db.String(300), nullable=False)
+    avatar = db.Column(db.String(255), nullable=True)
 
-# User model
-class User(db.Model):
-    user_id = db.Column(db.String(50), primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    bio = db.Column(db.String(200), nullable=True)
-    photo = db.Column(db.String(200), nullable=True)
+    def to_dict(self):
+        return {
+            'username': self.username,
+            'bio': self.bio,
+            'avatar': self.avatar or 'https://yourapi.com/avatars/default.png'
+        }
 
-    def __init__(self, user_id, name, bio, photo=None):
-        self.user_id = user_id
-        self.name = name
-        self.bio = bio
-        self.photo = photo
-
-# Post model
 class Post(db.Model):
-    post_id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.String(50), db.ForeignKey('user.user_id'), nullable=False)
-    name = db.Column(db.String(100), nullable=False)
+    id = db.Column(db.String, primary_key=True)
     content = db.Column(db.String(500), nullable=False)
-    image = db.Column(db.String(200), nullable=True)
-    posted_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
-    upvotes = db.Column(db.Integer, default=0)
-    downvotes = db.Column(db.Integer, default=0)
+    timestamp = db.Column(db.DateTime, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user_profile.id'), nullable=False)
+    media_type = db.Column(db.String(50), nullable=True)
+    media_uri = db.Column(db.String(255), nullable=True)
 
-    user = db.relationship('User', backref=db.backref('posts', lazy=True))
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'content': self.content,
+            'timestamp': self.timestamp.isoformat(),
+            'media': {'type': self.media_type, 'uri': self.media_uri} if self.media_uri else None
+        }
 
-    def __init__(self, user_id, name, content, image=None):
-        self.user_id = user_id
-        self.name = name
-        self.content = content
-        self.image = image
-
-# Comment model
-class Comment(db.Model):
-    comment_id = db.Column(db.Integer, primary_key=True)
-    post_id = db.Column(db.Integer, db.ForeignKey('post.post_id'), nullable=False)
-    user_id = db.Column(db.String(50), nullable=False)
-    comment_text = db.Column(db.String(500), nullable=False)
-    commented_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
-
-    post = db.relationship('Post', backref=db.backref('comments', lazy=True))
-
-    def __init__(self, post_id, user_id, comment_text):
-        self.post_id = post_id
-        self.user_id = user_id
-        self.comment_text = comment_text
-
-# Initialize database
+# Initialize the database
 with app.app_context():
     db.create_all()
 
-# Utility function for validating file extensions
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4'}
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
 # Routes
 
-# Route for login and generating JWT token
-@app.route('/login_validation', methods=['POST'])
-def login_validation():
-    user_id = request.form.get('user_id')
-    user = User.query.filter_by(user_id=user_id).first()  # Check if user exists in DB
-    if user:
-        access_token = create_access_token(identity=user.user_id)  # Generate JWT token
-        return jsonify(access_token=access_token), 200  # Return the token
-    else:
-        return jsonify({"message": "Invalid login credentials!"}), 401  # Error: Invalid credentials
-
-# Protect routes with JWT authentication
+# 1. Fetch the user profile
 @app.route('/profile', methods=['GET'])
-@jwt_required()
-def profile():
-    user_id = get_jwt_identity()  # Get the user_id from JWT token
-    user = User.query.filter_by(user_id=user_id).first()
-    if user:
-        return jsonify({
-            "user_id": user.user_id,
-            "name": user.name,
-            "bio": user.bio,
-            "photo": user.photo
-        }), 200
-    return jsonify({"message": "User not found!"}), 404
+def get_profile():
+    user_profile = UserProfile.query.first()  
+    if user_profile:
+        return jsonify(user_profile.to_dict())
+    return jsonify({"message": "Profile not found"}), 404
 
-@app.route('/update_profile', methods=['POST'])
-@jwt_required()
+# 2. Update the user profile (username, bio, avatar)
+@app.route('/profile', methods=['PUT'])
 def update_profile():
-    user_id = get_jwt_identity()  # Get the user_id from JWT token
-    user = User.query.filter_by(user_id=user_id).first()
+    data = request.get_json()
+    username = data.get('username')
+    bio = data.get('bio')
 
-    if not user:
-        return jsonify({"message": "User not found!"}), 404
+    if not username or not bio:
+        return jsonify({"message": "Username and bio are required!"}), 400
 
-    name = request.form.get('name')
-    bio = request.form.get('bio')
-    file = request.files.get('profile_picture')  # Handle profile picture upload
-    photo_filename = None
+    user_profile = UserProfile.query.first()
+    if not user_profile:
+        return jsonify({"message": "Profile not found"}), 404
 
-    if not name or not bio:
-        raise BadRequest('Name and Bio are required.')
+    user_profile.username = username
+    user_profile.bio = bio
 
-    # If there's an image, save it
-    if file and allowed_file(file.filename):
-        filename = os.path.join('static/uploads', ''.join(random.choices(string.ascii_uppercase + string.digits, k=10)) + secure_filename(file.filename))
-        file.save(filename)
-        photo_filename = filename
+    # Handle avatar upload
+    if 'avatar' in request.files:
+        avatar_file = request.files['avatar']
+        if avatar_file and allowed_file(avatar_file.filename):
+            filename = secure_filename(avatar_file.filename)
+            avatar_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            avatar_file.save(avatar_path)
+            user_profile.avatar = avatar_path  # Save the file path 
 
-    user.name = name
-    user.bio = bio
-    if photo_filename:
-        user.photo = photo_filename
+    db.session.commit()
 
-    db.session.commit()  # Update the database
-    return jsonify({"message": "Profile updated successfully!"}), 200
+    return jsonify(user_profile.to_dict())
 
-@app.route('/new_post', methods=['POST'])
-@jwt_required()
-def new_post():
-    user_id = get_jwt_identity()  # Get the user_id from JWT token
-    post_data = request.form.get('post_data')
-    file = request.files.get('image')  # Handle image upload
-    image_filename = None
-
-    if file and allowed_file(file.filename):
-        filename = os.path.join('static/uploads', ''.join(random.choices(string.ascii_uppercase + string.digits, k=10)) + secure_filename(file.filename))
-        file.save(filename)
-        image_filename = filename
-
-    # Create and save the new post
-    post = Post(user_id=user_id, name="John Doe", content=post_data, image=image_filename)
-    db.session.add(post)
-    db.session.commit()  # Save to the database
-    return jsonify({"message": "Post created successfully!"}), 200
-
-@app.route('/get_posts', methods=['GET'])
-@jwt_required()
+# 3. Fetch the user's posts
+@app.route('/posts', methods=['GET'])
 def get_user_posts():
-    user_id = get_jwt_identity()  # Get the user_id from JWT token
-    posts = Post.query.filter_by(user_id=user_id).all()  # Get posts for the logged-in user
-    posts_list = [{
-        "post_id": post.post_id,
-        "user_id": post.user_id,
-        "name": post.name,
-        "content": post.content,
-        "image": post.image,
-        "posted_at": post.posted_at,
-        "upvotes": post.upvotes,
-        "downvotes": post.downvotes,
-        "comments": [{"user_id": comment.user_id,
-                      "comment_text": comment.comment_text,
-                      "commented_at": comment.commented_at} for comment in post.comments]
-    } for post in posts]
+    posts = Post.query.all()
+    return jsonify([post.to_dict() for post in posts])
 
-    return jsonify(posts_list), 200  # Return posts as JSON
+# Helper function to check file extension
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
-@app.route('/upvote_post/<int:post_id>', methods=['POST'])
-@jwt_required()
-def upvote_post(post_id):
-    post = Post.query.get(post_id)
-    if not post:
-        return jsonify({"message": "Post not found!"}), 404
+# 4. Create a new post
+@app.route('/posts', methods=['POST'])
+def create_post():
+    data = request.get_json()
+    content = data.get('content')
+    user_id = 1  
+    media = data.get('media')  
 
-    post.upvotes += 1  # Increment upvote count
+    if not content:
+        return jsonify({"message": "Content is required"}), 400
+
+    post = Post(
+        id=str(datetime.utcnow().timestamp()),  # Unique ID based on timestamp
+        content=content,
+        timestamp=datetime.utcnow(),
+        user_id=user_id,
+        media_type=media['type'] if media else None,
+        media_uri=media['uri'] if media else None
+    )
+
+    db.session.add(post)
     db.session.commit()
-    return jsonify({"message": "Upvoted successfully!", "upvotes": post.upvotes}), 200
 
-@app.route('/downvote_post/<int:post_id>', methods=['POST'])
-@jwt_required()
-def downvote_post(post_id):
-    post = Post.query.get(post_id)
-    if not post:
-        return jsonify({"message": "Post not found!"}), 404
+    return jsonify(post.to_dict()), 201
 
-    post.downvotes += 1  # Increment downvote count
-    db.session.commit()
-    return jsonify({"message": "Downvoted successfully!", "downvotes": post.downvotes}), 200
-
-@app.route('/comment_post/<int:post_id>', methods=['POST'])
-@jwt_required()
-def comment_post(post_id):
-    post = Post.query.get(post_id)
-    if not post:
-        return jsonify({"message": "Post not found!"}), 404
-
-    comment_text = request.form.get('comment_text')
-    if not comment_text:
-        return jsonify({"message": "Comment text cannot be empty!"}), 400  # Error: Empty comment
-
-    # Get the user_id from the JWT token
-    user_id = get_jwt_identity()  # This retrieves the 'identity' from the JWT token, which is the user_id
-
-    # Append the comment to the post
-    comment = Comment(post_id=post_id, user_id=user_id, comment_text=comment_text)
-    db.session.add(comment)
-    db.session.commit()  # Save to the database
-    return jsonify({"message": "Comment added successfully!"}), 200
-
-@app.route('/logout', methods=['GET'])
-def logout():
-    return jsonify({"message": "Logged out successfully!"}), 200  # Invalidate the token on frontend
-
-# Run the Flask app
+# Run the app
 if __name__ == '__main__':
-    app.run(port=5000, debug=True)
+    app.run(debug=True)
